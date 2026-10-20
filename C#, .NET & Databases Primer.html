@@ -1,0 +1,933 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>C#, .NET &amp; Databases Primer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: an IDE-like workbench — chapter rail on the left, one interactive "stop" on the stage, prev/next to present in class. */
+:root{
+  --paper:#F2F4F6; --panel:#FFFFFF; --ink:#14212B; --muted:#56646F; --line:#D7DEE3;
+  --accent:#1F5FD1; --accent-ink:#FFFFFF; --accent-soft:#E2EBFB;
+  --hi:#E6A21F; --hi-soft:#FFF2D2; --ok:#17804F; --ok-soft:#DDF3E7; --bad:#BE3A30; --bad-soft:#FBE3E0;
+  --code-bg:#0F1B26; --code-ink:#DCE6EE; --code-dim:#7F93A3; --code-line:#1E2E3C; --code-on:#2B3B1E;
+  --tk:#82B4FF; --ts:#F2C27B; --tn:#B9E58A; --tt:#6FD3C7; --tc:#7A8FA0;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", Consolas, "Courier New", monospace;
+  --scale:1;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0D141A; --panel:#141E26; --ink:#E5ECF1; --muted:#95A5B1; --line:#25323C;
+  --accent:#6C9CFF; --accent-ink:#0B1420; --accent-soft:#1A2943;
+  --hi:#F0B240; --hi-soft:#3A2D10; --ok:#4CC38A; --ok-soft:#123326; --bad:#F0736A; --bad-soft:#3D1A17;
+  --code-bg:#091016; --code-line:#18242E; --code-on:#2A3818; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --paper:#0D141A; --panel:#141E26; --ink:#E5ECF1; --muted:#95A5B1; --line:#25323C;
+  --accent:#6C9CFF; --accent-ink:#0B1420; --accent-soft:#1A2943;
+  --hi:#F0B240; --hi-soft:#3A2D10; --ok:#4CC38A; --ok-soft:#123326; --bad:#F0736A; --bad-soft:#3D1A17;
+  --code-bg:#091016; --code-line:#18242E; --code-on:#2A3818; color-scheme:dark;}
+
+html{font-size:calc(16px * var(--scale))}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:1rem;line-height:1.55;}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--panel)}
+*{box-sizing:border-box}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;line-height:1.15;margin:0}
+code,.mono{font-family:var(--f-mono);font-size:.92em}
+p{margin:0;max-width:68ch}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--panel);border-bottom:1px solid var(--line);
+  padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;min-width:0}
+.brand h1{font-size:1.25rem;font-weight:800;letter-spacing:-.01em}
+.brand .tag{font-family:var(--f-mono);font-size:.75rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.tools{margin-left:auto;display:flex;gap:6px;align-items:center}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 12px;cursor:pointer;line-height:1.3}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.btn.small{padding:3px 9px;font-size:.85rem}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.progress{height:3px;background:var(--line);position:relative;flex-basis:100%;border-radius:3px;overflow:hidden}
+.progress i{position:absolute;inset:0 auto 0 0;background:var(--accent);transition:width .3s}
+
+/* layout */
+.wrap{display:grid;grid-template-columns:250px minmax(0,1fr);gap:0;min-height:calc(100vh - 70px)}
+.rail{border-right:1px solid var(--line);padding:18px 12px 24px max(12px,env(safe-area-inset-left,0px));background:var(--panel)}
+.rail h4{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:16px 8px 6px;font-weight:600}
+.rail h4:first-child{margin-top:0}
+.rail ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.rail a{display:flex;gap:10px;align-items:baseline;padding:7px 8px;border-radius:7px;color:var(--ink);text-decoration:none;font-size:.95rem}
+.rail a .n{font-family:var(--f-mono);font-size:.75rem;color:var(--muted);min-width:1.6em}
+.rail a:hover{background:var(--accent-soft)}
+.rail a[aria-current="true"]{background:var(--accent);color:var(--accent-ink)}
+.rail a[aria-current="true"] .n{color:var(--accent-ink)}
+.stage{padding-block:28px 40px;padding-left:max(16px,clamp(16px,3vw,44px));padding-right:max(16px,env(safe-area-inset-right,0px),clamp(16px,3vw,44px));min-width:0}
+.stop{display:grid;gap:22px;max-width:1150px}
+.stop[hidden]{display:none!important}
+.eyebrow{font-family:var(--f-mono);font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.stop h2{font-size:clamp(1.7rem,3.2vw,2.5rem);font-weight:800;letter-spacing:-.02em;margin-top:4px}
+.lead{font-size:1.12rem;color:var(--muted);margin-top:8px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
+.grid2 > *{min-width:0}
+.grid2.wide-left{grid-template-columns:minmax(0,2.2fr) minmax(0,1fr)}
+.scorecard{position:sticky;top:90px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+.card h3{font-size:1.1rem;margin-bottom:10px}
+.muted{color:var(--muted)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.stack{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+label.f{display:grid;gap:4px;font-size:.88rem;color:var(--muted)}
+input[type=text],input[type=number],select,textarea{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.pager{display:flex;justify-content:space-between;gap:10px;margin-top:6px;max-width:1150px;flex-wrap:wrap}
+.key{font-family:var(--f-mono);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
+
+/* code */
+.code{background:var(--code-bg);color:var(--code-ink);border-radius:12px;font-family:var(--f-mono);font-size:.92rem;line-height:1.7;overflow-x:auto;padding:14px 0}
+.code .ln{display:block;padding:0 18px 0 0;white-space:pre;border-left:3px solid transparent}
+.code .ln::before{content:attr(data-n);display:inline-block;width:2.6em;padding-right:1em;text-align:right;color:var(--code-dim);opacity:.6}
+.code .ln.on{background:var(--code-on);border-left-color:var(--hi)}
+.code .ln.dim{opacity:.4}
+.k{color:var(--tk)} .s{color:var(--ts)} .nm{color:var(--tn)} .t{color:var(--tt)} .c{color:var(--tc);font-style:italic}
+.part{cursor:pointer;border-radius:4px;outline:1px dashed transparent;transition:background .15s}
+.part:hover{outline-color:var(--code-dim)}
+.part.sel{background:rgba(230,162,31,.28);outline:1px solid var(--hi)}
+.console{background:var(--code-bg);color:#E8F0E6;font-family:var(--f-mono);border-radius:10px;padding:12px 14px;min-height:3.2em;white-space:pre-wrap;font-size:.9rem;overflow-x:auto}
+.console .prompt{color:var(--code-dim)}
+
+/* chips & pills */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 12px;cursor:pointer;font-size:.88rem}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.8rem;font-weight:700}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.hi{background:var(--hi-soft);color:var(--ink)}
+.explain{border-left:4px solid var(--hi);background:var(--hi-soft);padding:12px 14px;border-radius:0 10px 10px 0;min-height:5.5em}
+.explain b{font-family:var(--f-display)}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:.92rem;font-variant-numeric:tabular-nums}
+th,td{padding:7px 12px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{font-family:var(--f-mono);font-size:.78rem;letter-spacing:.04em;color:var(--muted);background:var(--paper);font-weight:600}
+tr:last-child td{border-bottom:0}
+.types td:first-child{font-family:var(--f-mono);color:var(--accent);font-weight:600}
+
+/* if/else */
+.conds{display:grid;gap:6px}
+.cond{display:flex;justify-content:space-between;gap:10px;padding:8px 12px;border-radius:8px;border:1px solid var(--line);font-family:var(--f-mono);font-size:.9rem}
+.cond.t{border-color:var(--ok);background:var(--ok-soft)} .cond.f{opacity:.55} .cond.skip{opacity:.3}
+.bigval{font-family:var(--f-display);font-size:3.2rem;font-weight:800;line-height:1}
+input[type=range]{width:100%;accent-color:var(--accent)}
+
+/* vars */
+.vars{display:flex;gap:10px;flex-wrap:wrap}
+.var{border:1px solid var(--line);border-radius:10px;padding:8px 14px;min-width:90px;background:var(--panel)}
+.var .vn{font-family:var(--f-mono);font-size:.75rem;color:var(--muted)}
+.var .vv{font-family:var(--f-mono);font-size:1.35rem;font-weight:600;font-variant-numeric:tabular-nums}
+.var.flash{border-color:var(--hi);background:var(--hi-soft)}
+
+/* method machine */
+.machine{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center}
+.machine .box{border:2px dashed var(--line);border-radius:12px;padding:12px;display:grid;gap:8px}
+.machine .arrow{font-family:var(--f-mono);color:var(--muted);font-size:1.4rem}
+.slot{display:flex;justify-content:space-between;gap:8px;font-family:var(--f-mono);font-size:.88rem;padding:4px 8px;border-radius:6px;background:var(--paper)}
+.slot.lit{background:var(--hi-soft);outline:1px solid var(--hi)}
+.ret{font-family:var(--f-display);font-size:2rem;font-weight:800}
+
+/* objects */
+.heap{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.obj{border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden}
+.obj header{background:var(--accent-soft);padding:8px 12px;font-family:var(--f-mono);font-size:.82rem;display:flex;justify-content:space-between;gap:8px}
+.obj dl{margin:0;padding:10px 12px;display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:.88rem}
+.obj dt{font-family:var(--f-mono);color:var(--muted)} .obj dd{margin:0;font-weight:700;overflow-wrap:anywhere}
+.obj footer{padding:0 12px 12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.obj.new{animation:pop .35s ease-out}
+@keyframes pop{from{transform:scale(.94);opacity:.4}to{transform:none;opacity:1}}
+
+/* pipeline */
+.pipe{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;overflow-x:auto}
+.stagebox{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel);display:grid;gap:4px;min-width:120px;position:relative;transition:all .25s}
+.stagebox .sn{font-family:var(--f-mono);font-size:.7rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.stagebox b{font-family:var(--f-display);font-size:1rem}
+.stagebox small{color:var(--muted);font-size:.8rem;line-height:1.35}
+.stagebox.on{border-color:var(--hi);background:var(--hi-soft);box-shadow:0 0 0 2px var(--hi)}
+.stagebox.done{border-color:var(--accent)}
+.phase{display:flex;gap:4px;font-family:var(--f-mono);font-size:.72rem;color:var(--muted);margin-bottom:4px}
+.phase span{flex:1;text-align:center;border-top:2px solid var(--line);padding-top:3px}
+.phase span.b{border-color:var(--accent)} .phase span.r{border-color:var(--ok)}
+
+/* db concepts */
+.dbt td,.dbt th{transition:background .2s}
+.dbt .hl{background:var(--hi-soft)!important;outline:2px solid var(--hi);outline-offset:-2px}
+.dbt.hlall{outline:3px solid var(--hi);outline-offset:2px}
+.pk::after{content:" PK";font-family:var(--f-mono);font-size:.68rem;color:var(--hi)}
+.fk::after{content:" FK";font-family:var(--f-mono);font-size:.68rem;color:var(--accent)}
+
+/* sql */
+textarea.sql{font-family:var(--f-mono);font-size:.95rem;min-height:120px;resize:vertical;line-height:1.5}
+.schema{font-family:var(--f-mono);font-size:.82rem;display:grid;gap:10px}
+.schema b{color:var(--accent)}
+.msg{font-size:.9rem;padding:8px 12px;border-radius:8px}
+.msg.ok{background:var(--ok-soft);color:var(--ok)} .msg.bad{background:var(--bad-soft);color:var(--bad)}
+
+/* winform mock */
+.winform{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--paper);box-shadow:0 8px 24px rgba(0,0,0,.08)}
+.winform .tb{background:var(--panel);border-bottom:1px solid var(--line);padding:6px 10px;display:flex;justify-content:space-between;font-size:.85rem}
+.winform .tb span:last-child{font-family:var(--f-mono);color:var(--muted);letter-spacing:.3em}
+.winform .body{padding:14px;display:grid;gap:10px}
+.flow{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:.85rem}
+.flow .fs{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);transition:all .2s}
+.flow .fs.on{border-color:var(--hi);background:var(--hi-soft)}
+.flow .ar{color:var(--muted);font-family:var(--f-mono)}
+.toggle{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.toggle button{border:0;background:var(--panel);padding:6px 12px;cursor:pointer;font-size:.88rem}
+.toggle button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+
+/* quiz */
+.q{display:grid;gap:8px}
+.q .opts{display:grid;gap:6px}
+.opt{text-align:left;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:9px 12px;cursor:pointer}
+.opt:hover:not([disabled]){border-color:var(--accent)}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt[disabled]{cursor:default}
+.why{font-size:.9rem;color:var(--muted)}
+.score{font-family:var(--f-display);font-size:2.6rem;font-weight:800}
+
+@media (max-width:900px){
+  .wrap{grid-template-columns:minmax(0,1fr)}
+  .rail{border-right:0;border-bottom:1px solid var(--line);padding:8px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));overflow-x:auto}
+  .rail h4{display:none}
+  .rail nav{display:flex;gap:4px;width:max-content}
+  .rail ol{display:flex;gap:4px}
+  .rail a{white-space:nowrap;padding:6px 10px}
+  .grid2,.grid2.wide-left{grid-template-columns:minmax(0,1fr)}
+  .scorecard{position:static}
+  .pipe{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .stage{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+}
+@media (max-width:520px){
+  .machine{grid-template-columns:1fr}.machine .arrow{transform:rotate(90deg);justify-self:center}
+  .pipe{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .brand .tag{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<header class="top">
+  <div class="brand"><h1>C#, .NET &amp; Databases Primer</h1><span class="tag">HNDIT · warm-up before Week 1</span></div>
+  <div class="tools">
+    <button class="btn small" id="fontDown" title="Smaller text">A−</button>
+    <button class="btn small" id="fontUp" title="Larger text for the projector">A+</button>
+    <button class="btn small" id="fullBtn" title="Full screen">Full screen</button>
+  </div>
+  <div class="progress"><i id="prog" style="width:0"></i></div>
+</header>
+
+<div class="wrap">
+  <aside class="rail"><nav id="nav"></nav></aside>
+  <main class="stage" id="stage">
+
+<!-- 1 -->
+<section class="stop" id="s1" data-part="C# &amp; .NET" data-name="Anatomy of a program">
+  <div><div class="eyebrow">Stop 1 · C# basics</div><h2>Anatomy of a C# program</h2>
+  <p class="lead">Every C# program is built from the same few parts. Click any highlighted part of the code to see what it does.</p></div>
+  <div class="grid2">
+    <div class="stack">
+      <div class="code" id="anatomy"></div>
+      <div class="row"><button class="btn primary" id="runHello">▶ Run (F5)</button><span class="muted">Output appears in the console below.</span></div>
+      <div class="console" id="helloOut"><span class="prompt">C:\HelloApp&gt; </span></div>
+    </div>
+    <div class="stack">
+      <div class="explain" id="anatomyExplain"><b>Click a part of the code.</b><br>Start with <code>using</code> at the top, then work down.</div>
+      <div class="card"><h3>Three rules to remember</h3>
+        <ul style="margin:0;padding-left:1.2em;display:grid;gap:6px">
+          <li>C# is <b>case-sensitive</b>: <code>Main</code> and <code>main</code> are different names.</li>
+          <li>Every statement ends with a <b>semicolon</b> <code>;</code></li>
+          <li>Curly braces <code>{ }</code> group code into blocks, and every <code>{</code> needs a matching <code>}</code>.</li>
+        </ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="stop" id="s2" data-part="C# &amp; .NET" data-name="Variables &amp; data types" hidden>
+  <div><div class="eyebrow">Stop 2 · C# basics</div><h2>Variables and data types</h2>
+  <p class="lead">A variable is a named box in memory. Its <b>type</b> decides what it can hold. Try putting different values into different boxes and watch the compiler react.</p></div>
+  <div class="grid2">
+    <div class="card stack">
+      <h3>Declare a variable</h3>
+      <div class="row" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <label class="f">Type<select id="vType">
+          <option>int</option><option>double</option><option>decimal</option><option>char</option><option selected>string</option><option>bool</option></select></label>
+        <label class="f">Name<input type="text" id="vName" value="studentName"></label>
+        <label class="f">Value<input type="text" id="vVal" value="Nimal"></label>
+      </div>
+      <div class="code"><span class="ln" data-n="1" id="vLine"></span></div>
+      <div id="vResult"></div>
+      <div class="chips" id="vTries"></div>
+    </div>
+    <div class="stack">
+      <div class="tbl-wrap"><table class="types">
+        <thead><tr><th>Type</th><th>Holds</th><th>Example</th><th>Size</th></tr></thead>
+        <tbody>
+          <tr><td>int</td><td>Whole numbers (about ±2.1 billion)</td><td class="mono">int age = 19;</td><td>4 bytes</td></tr>
+          <tr><td>double</td><td>Decimal numbers, fast but approximate</td><td class="mono">double gpa = 3.45;</td><td>8 bytes</td></tr>
+          <tr><td>decimal</td><td>Exact decimals, use for money</td><td class="mono">decimal fee = 1500.00m;</td><td>16 bytes</td></tr>
+          <tr><td>char</td><td>One character, in single quotes</td><td class="mono">char grade = 'A';</td><td>2 bytes</td></tr>
+          <tr><td>string</td><td>Text, in double quotes</td><td class="mono">string city = "Ampara";</td><td>varies</td></tr>
+          <tr><td>bool</td><td>true or false</td><td class="mono">bool passed = true;</td><td>1 byte</td></tr>
+        </tbody></table></div>
+      <div class="card"><h3>Naming rules</h3>
+        <p>Start with a letter or <code>_</code>. Letters, digits and <code>_</code> only, no spaces. You cannot use a keyword such as <code>class</code> or <code>int</code>. Convention: <b>camelCase</b> for variables (<code>totalMarks</code>), <b>PascalCase</b> for classes and methods (<code>CalculateTotal</code>).</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="stop" id="s3" data-part="C# &amp; .NET" data-name="Operators &amp; conversion" hidden>
+  <div><div class="eyebrow">Stop 3 · C# basics</div><h2>Operators, and why "5" + "3" is "53"</h2>
+  <p class="lead">Arithmetic works on numbers. Text from a TextBox is always a <code>string</code>, so you must convert it before doing maths.</p></div>
+  <div class="grid2">
+    <div class="card stack">
+      <h3>Text vs numbers</h3>
+      <div class="row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <label class="f">txtNumber1.Text<input type="text" id="cA" value="5"></label>
+        <label class="f">txtNumber2.Text<input type="text" id="cB" value="3"></label>
+      </div>
+      <div class="toggle" role="group" aria-label="Mode"><button id="cJoin" aria-pressed="true">Add the text</button><button id="cConv" aria-pressed="false">Convert, then add</button></div>
+      <div class="code" id="cCode"></div>
+      <div class="console" id="cOut"></div>
+      <div class="explain" id="cWhy"></div>
+    </div>
+    <div class="card stack">
+      <h3>Arithmetic operators</h3>
+      <div class="row" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <label class="f">a<input type="number" id="oA" value="7"></label>
+        <label class="f">b<input type="number" id="oB" value="2"></label>
+        <label class="f">Type<select id="oT"><option>int</option><option>double</option></select></label>
+      </div>
+      <div class="tbl-wrap"><table><thead><tr><th>Operator</th><th>Meaning</th><th>Expression</th><th>Result</th></tr></thead><tbody id="oBody"></tbody></table></div>
+      <p class="muted" id="oNote"></p>
+    </div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="stop" id="s4" data-part="C# &amp; .NET" data-name="Decisions: if / else" hidden>
+  <div><div class="eyebrow">Stop 4 · C# basics</div><h2>Making decisions with if / else</h2>
+  <p class="lead">C# checks the conditions from top to bottom and runs the <b>first</b> block whose condition is true. Everything after it is skipped. Drag the slider.</p></div>
+  <div class="grid2">
+    <div class="stack">
+      <div class="card stack">
+        <label class="f" for="mk">marks</label>
+        <div class="row"><input type="range" id="mk" min="0" max="100" value="68" style="flex:1"><span class="bigval" id="mkV">68</span></div>
+        <div class="row" style="justify-content:space-between"><span class="muted">grade =</span><span class="bigval" id="gV" style="color:var(--accent)">B</span></div>
+      </div>
+      <div class="conds" id="conds"></div>
+      <p class="muted" style="font-size:.85rem">Example grading scale for this demo only.</p>
+    </div>
+    <div class="code" id="ifCode"></div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="stop" id="s5" data-part="C# &amp; .NET" data-name="Loops" hidden>
+  <div><div class="eyebrow">Stop 5 · C# basics</div><h2>Repeating with a for loop</h2>
+  <p class="lead">A <code>for</code> loop has three parts: <b>start</b>, <b>condition</b> and <b>step</b>. Step through it one line at a time and watch the variables change.</p></div>
+  <div class="card row" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:10px;align-items:end">
+    <label class="f">start<input type="number" id="lS" value="1"></label>
+    <label class="f">end<input type="number" id="lE" value="5"></label>
+    <label class="f">step<input type="number" id="lP" value="1" min="1"></label>
+    <div class="row"><button class="btn primary" id="lStep">Step ▸</button><button class="btn" id="lAll">Run all</button><button class="btn" id="lReset">Reset</button></div>
+  </div>
+  <div class="grid2">
+    <div class="code" id="loopCode"></div>
+    <div class="stack">
+      <div class="vars"><div class="var" id="vi"><div class="vn">int i</div><div class="vv">–</div></div><div class="var" id="vt"><div class="vn">int total</div><div class="vv">–</div></div><div class="var"><div class="vn">step</div><div class="vv" id="lCount">0</div></div></div>
+      <div class="explain" id="lNote"><b>Press Step.</b> The first line creates <code>total</code> and sets it to 0.</div>
+      <div class="console" id="lOut"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="stop" id="s6" data-part="C# &amp; .NET" data-name="Methods" hidden>
+  <div><div class="eyebrow">Stop 6 · C# basics</div><h2>Methods: write once, call many times</h2>
+  <p class="lead">A method is a named block of code. You send <b>arguments</b> in, the method stores them in <b>parameters</b>, does its work, and <b>returns</b> a result.</p></div>
+  <div class="grid2">
+    <div class="code" id="mCode"></div>
+    <div class="stack">
+      <div class="card stack">
+        <h3>Call it</h3>
+        <div class="row" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+          <label class="f">price<input type="number" id="mP" value="250"></label>
+          <label class="f">qty<input type="number" id="mQ" value="3"></label>
+          <label class="f">discount %<input type="number" id="mD" value="10"></label>
+        </div>
+        <div class="code"><span class="ln" data-n="›" id="mCall"></span></div>
+        <button class="btn primary" id="mGo" style="justify-self:start">Call CalculateTotal()</button>
+      </div>
+      <div class="machine">
+        <div class="box"><div class="muted" style="font-size:.8rem">parameters</div>
+          <div class="slot" id="ms1"><span>price</span><b>–</b></div>
+          <div class="slot" id="ms2"><span>qty</span><b>–</b></div>
+          <div class="slot" id="ms3"><span>discountPercent</span><b>–</b></div></div>
+        <div class="arrow">→</div>
+        <div class="box"><div class="muted" style="font-size:.8rem">inside the method</div>
+          <div class="slot" id="ms4"><span>subTotal</span><b>–</b></div>
+          <div class="slot" id="ms5"><span>discount</span><b>–</b></div>
+          <div class="muted" style="font-size:.8rem">return</div><div class="ret" id="mRet">–</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 -->
+<section class="stop" id="s7" data-part="C# &amp; .NET" data-name="Classes &amp; objects" hidden>
+  <div><div class="eyebrow">Stop 7 · C# basics</div><h2>Classes and objects</h2>
+  <p class="lead">A <b>class</b> is a blueprint. An <b>object</b> is one thing built from it with <code>new</code>. One <code>Student</code> class can produce as many student objects as you need, each with its own data.</p></div>
+  <div class="grid2">
+    <div class="stack">
+      <div class="code" id="clsCode"></div>
+      <div class="card stack">
+        <h3>Create an object</h3>
+        <div class="row" style="display:grid;grid-template-columns:1.4fr 1fr .7fr;gap:10px">
+          <label class="f">Name<input type="text" id="oName" value="Ayesha Rinoza"></label>
+          <label class="f">IndexNo<input type="text" id="oIdx" value="IT/26/003"></label>
+          <label class="f">Marks<input type="number" id="oMarks" value="81" min="0" max="100"></label>
+        </div>
+        <button class="btn primary" id="oNew" style="justify-self:start">new Student()</button>
+        <div class="code" id="oLines"></div>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="row" style="justify-content:space-between"><h3 style="font-size:1.1rem">Objects in memory</h3><span class="muted" id="oCount"></span></div>
+      <div class="heap" id="heap"></div>
+      <p class="muted" style="font-size:.85rem">The first two objects are examples. Same class, different data: that is the whole idea.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="stop" id="s8" data-part="C# &amp; .NET" data-name="How .NET runs your code" hidden>
+  <div><div class="eyebrow">Stop 8 · .NET</div><h2>How .NET runs your code</h2>
+  <p class="lead">Your C# is compiled twice: first to <b>CIL</b> when you build, then to <b>machine code</b> by the JIT compiler when the program runs. Press Build, then Run.</p></div>
+  <div class="row"><div class="toggle" role="group" aria-label="Source language"><button id="langCs" aria-pressed="true">C# source</button><button id="langVb" aria-pressed="false">VB.NET source</button></div>
+    <button class="btn primary" id="pBuild">Build (Ctrl+Shift+B)</button><button class="btn" id="pRun" disabled>Run (F5)</button><button class="btn" id="pReset">Reset</button></div>
+  <div>
+    <div class="phase"><span class="b" style="flex:3">BUILD TIME · on your PC in Visual Studio</span><span class="r" style="flex:3">RUN TIME · on any PC with .NET installed</span></div>
+    <div class="pipe" id="pipe"></div>
+  </div>
+  <div class="grid2">
+    <div class="stack"><div class="eyebrow" id="pShowT">What it looks like</div><div class="code" id="pShow"></div></div>
+    <div class="explain" id="pNote"><b>Press Build.</b> Watch each stage light up in order.</div>
+  </div>
+  <div class="card"><h3>.NET Framework or .NET?</h3>
+    <p><b>.NET Framework 4.8</b> is the Windows-only version used in this module for Windows Forms. <b>.NET</b> (versions 8, 10 and later) is the newer cross-platform version that also runs on Linux and macOS. Both use the same idea: C# → CIL → CLR + JIT → machine code.</p></div>
+</section>
+
+<!-- 9 -->
+<section class="stop" id="s9" data-part="Databases" data-name="What is a database?" hidden>
+  <div><div class="eyebrow">Stop 9 · Databases</div><h2>What is a database?</h2>
+  <p class="lead">A <b>database</b> stores data in <b>tables</b>. A <b>DBMS</b> (SQL Server, MySQL, SQLite, Oracle) is the software that manages it. We talk to it using <b>SQL</b>. Click a term to find it in the tables.</p></div>
+  <div class="chips" id="dbTerms"></div>
+  <div class="grid2">
+    <div class="stack"><div class="muted mono" style="font-size:.85rem">Students</div><div class="tbl-wrap"><table class="dbt" id="tStudents"></table></div></div>
+    <div class="stack"><div class="muted mono" style="font-size:.85rem">Courses</div><div class="tbl-wrap"><table class="dbt" id="tCourses"></table></div>
+      <div class="explain" id="dbNote"><b>Pick a term above.</b></div></div>
+  </div>
+</section>
+
+<!-- 10 -->
+<section class="stop" id="s10" data-part="Databases" data-name="SQL playground" hidden>
+  <div><div class="eyebrow">Stop 10 · Databases</div><h2>SQL playground</h2>
+  <p class="lead">A real database engine runs inside this page. Pick an example or type your own SQL and press Run. Nothing you do here can break anything; press Reset to start over.</p></div>
+  <div class="chips" id="sqlPresets"></div>
+  <div class="grid2 wide-left">
+    <div class="stack">
+      <textarea class="sql" id="sqlIn" spellcheck="false" aria-label="SQL query"></textarea>
+      <div class="row"><button class="btn primary" id="sqlRun">▶ Run <span class="key" style="border-color:currentColor;color:inherit">Ctrl+Enter</span></button><button class="btn" id="sqlReset">Reset database</button><span class="muted" id="sqlStatus">Loading database engine…</span></div>
+      <div id="sqlMsg"></div>
+      <div id="sqlRes"></div>
+    </div>
+    <div class="card"><h3>Tables</h3><div class="schema" id="schema">Loading…</div>
+      <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
+      <h3>CRUD → SQL</h3>
+      <div class="tbl-wrap"><table><tbody>
+        <tr><td><b>C</b>reate</td><td class="mono">INSERT</td></tr>
+        <tr><td><b>R</b>ead</td><td class="mono">SELECT</td></tr>
+        <tr><td><b>U</b>pdate</td><td class="mono">UPDATE</td></tr>
+        <tr><td><b>D</b>elete</td><td class="mono">DELETE</td></tr></tbody></table></div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 -->
+<section class="stop" id="s11" data-part="Databases" data-name="C# talks to the database" hidden>
+  <div><div class="eyebrow">Stop 11 · C# + Databases</div><h2>A C# form talks to the database</h2>
+  <p class="lead">A Windows Forms app uses <b>ADO.NET</b> classes to send SQL to the database and show the results in a grid. Type a name and press Search.</p></div>
+  <div class="flow" id="flow"></div>
+  <div class="grid2">
+    <div class="stack">
+      <div class="winform">
+        <div class="tb"><span>frmStudents</span><span>— ▢ ✕</span></div>
+        <div class="body">
+          <div class="row"><label for="wSearch" style="font-size:.9rem">Name:</label><input type="text" id="wSearch" value="an" style="flex:1;min-width:120px"><button class="btn primary" id="wGo">Search</button></div>
+          <div class="tbl-wrap" id="wGrid" style="min-height:120px"></div>
+          <div class="muted" style="font-size:.82rem" id="wStat">dgvStudents</div>
+        </div>
+      </div>
+      <div class="row"><span class="muted" style="font-size:.9rem">How the query is built:</span>
+        <div class="toggle" role="group" aria-label="Query style"><button id="wSafe" aria-pressed="true">Parameters (safe)</button><button id="wUnsafe" aria-pressed="false">Joining strings (unsafe)</button></div></div>
+      <div class="explain" id="wNote"></div>
+    </div>
+    <div class="stack"><div class="code" id="wCode"></div>
+      <div class="code" id="wSql"></div></div>
+  </div>
+</section>
+
+<!-- 12 -->
+<section class="stop" id="s12" data-part="Check" data-name="Quick quiz" hidden>
+  <div><div class="eyebrow">Stop 12 · Check</div><h2>Quick quiz</h2>
+  <p class="lead">Ten questions on everything above. Click an answer to see if you are right.</p></div>
+  <div class="grid2 wide-left">
+    <div class="stack" id="quiz"></div>
+    <div class="card stack scorecard"><div class="muted">Score</div><div class="score" id="qScore">0 / 10</div><div class="muted" id="qMsg">Answer all ten.</div><button class="btn" id="qReset" style="justify-self:start">Try again</button></div>
+  </div>
+</section>
+
+    <div class="pager"><button class="btn" id="prev">← Previous</button><span class="muted" style="align-self:center;font-size:.85rem">Use <span class="key">←</span> <span class="key">→</span> to move between stops</span><button class="btn primary" id="next">Next →</button></div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sql.js@1.8.0/dist/sql-asm.js"></script>
+<script>
+(function(){
+"use strict";
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const reduced=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+const wait=ms=>new Promise(r=>setTimeout(r,reduced?0:ms));
+
+/* ---------- tiny C# highlighter ---------- */
+const KW=new Set("using namespace class static void public private return if else for while new int double decimal string char bool true false var foreach in Dim As Integer get set this null".split(" "));
+function hl(src){
+  const re=/(\/\/[^\n]*)|(@"[^"]*"|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)')|(\b\d+(?:\.\d+)?m?\b)|(\b[A-Za-z_][A-Za-z0-9_]*\b)/g;
+  let out="",last=0,m;
+  while((m=re.exec(src))){
+    out+=esc(src.slice(last,m.index));
+    if(m[1]) out+=`<span class="c">${esc(m[1])}</span>`;
+    else if(m[2]) out+=`<span class="s">${esc(m[2])}</span>`;
+    else if(m[3]) out+=`<span class="nm">${esc(m[3])}</span>`;
+    else { const w=m[4]; out+= KW.has(w)?`<span class="k">${w}</span>`: (/^[A-Z]/.test(w)?`<span class="t">${w}</span>`:w); }
+    last=re.lastIndex;
+  }
+  return out+esc(src.slice(last));
+}
+function codeLines(el,lines,opts={}){
+  el.innerHTML=lines.map((l,i)=>`<span class="ln" data-n="${i+1}" data-i="${i}">${opts.raw?l:hl(l)||" "}</span>`).join("");
+}
+function mark(el,idx){ [...el.children].forEach((c,i)=>c.classList.toggle("on",Array.isArray(idx)?idx.includes(i):i===idx)); }
+
+/* ---------- navigation ---------- */
+const stops=$$(".stop"); let cur=0;
+function buildNav(){
+  let html="",part="";
+  stops.forEach((s,i)=>{
+    if(s.dataset.part!==part){ if(part) html+="</ol>"; part=s.dataset.part; html+=`<h4>${part}</h4><ol>`; }
+    html+=`<li><a href="#${s.id}" data-i="${i}"><span class="n">${String(i+1).padStart(2,"0")}</span><span>${s.dataset.name}</span></a></li>`;
+  });
+  $("#nav").innerHTML=html+"</ol>";
+  $$("#nav a").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();go(+a.dataset.i);}));
+}
+function go(i){
+  cur=Math.max(0,Math.min(stops.length-1,i));
+  stops.forEach((s,j)=>s.hidden=j!==cur);
+  $$("#nav a").forEach(a=>a.setAttribute("aria-current",+a.dataset.i===cur?"true":"false"));
+  const act=$(`#nav a[data-i="${cur}"]`); if(act&&act.scrollIntoView) act.scrollIntoView({block:"nearest",inline:"nearest"});
+  $("#prev").disabled=cur===0; $("#next").disabled=cur===stops.length-1;
+  $("#prog").style.width=((cur+1)/stops.length*100)+"%";
+  try{history.replaceState(null,"","#"+stops[cur].id);}catch(e){}
+  window.scrollTo({top:0});
+}
+buildNav();
+$("#prev").onclick=()=>go(cur-1); $("#next").onclick=()=>go(cur+1);
+document.addEventListener("keydown",e=>{
+  if(/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+  if(e.key==="ArrowRight") go(cur+1); if(e.key==="ArrowLeft") go(cur-1);
+});
+let scale=1; try{scale=+localStorage.getItem("primerScale")||1;}catch(e){}
+const setScale=v=>{scale=Math.max(.8,Math.min(1.6,v));document.documentElement.style.setProperty("--scale",scale);try{localStorage.setItem("primerScale",scale);}catch(e){}};
+setScale(scale);
+$("#fontUp").onclick=()=>setScale(scale+.1); $("#fontDown").onclick=()=>setScale(scale-.1);
+$("#fullBtn").onclick=()=>{ try{ const p=document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen(); if(p&&p.catch)p.catch(()=>{}); }catch(e){} };
+
+/* ---------- 1. anatomy ---------- */
+const AN={
+  using:["using System;","<b>using directive.</b> Lets you use classes from the <code>System</code> namespace (such as <code>Console</code>) without typing <code>System.Console</code> every time."],
+  ns:["namespace HelloApp","<b>namespace.</b> A named container that groups related classes, like a folder. It stops names clashing between projects."],
+  cls:["class Program","<b>class.</b> All C# code lives inside a class. A class is a blueprint; here it simply holds our <code>Main</code> method."],
+  main:["static void Main(string[] args)","<b>Main method.</b> The entry point: the program starts running here. <code>static</code> means it runs without creating an object, <code>void</code> means it returns nothing."],
+  stmt:['Console.WriteLine("Hello, HNDIT!");',"<b>statement.</b> One instruction. <code>Console</code> is a class, <code>WriteLine</code> is a method that prints a line of text. The text is a <code>string</code> in double quotes."],
+  semi:[";","<b>semicolon.</b> Marks the end of a statement. Forget it and you get error <code>CS1002: ; expected</code>."],
+  brace:["{ }","<b>braces.</b> Open and close a block. The class body, the method body and the namespace each have their own pair."]
+};
+const P=(k,t)=>`<span class="part" data-k="${k}" tabindex="0">${t}</span>`;
+const anatomyHTML=[
+  P("using",'<span class="k">using</span> <span class="t">System</span>')+P("semi",";"),
+  "",
+  P("ns",'<span class="k">namespace</span> <span class="t">HelloApp</span>'),
+  P("brace","{"),
+  "    "+P("cls",'<span class="k">class</span> <span class="t">Program</span>'),
+  "    "+P("brace","{"),
+  "        "+P("main",'<span class="k">static</span> <span class="k">void</span> <span class="t">Main</span>(<span class="k">string</span>[] args)'),
+  "        "+P("brace","{"),
+  "            "+P("stmt",'<span class="t">Console</span>.<span class="t">WriteLine</span>(<span class="s">"Hello, HNDIT!"</span>)')+P("semi",";"),
+  "        "+P("brace","}"),
+  "    "+P("brace","}"),
+  P("brace","}")
+];
+codeLines($("#anatomy"),anatomyHTML,{raw:true});
+function pick(k){ $$("#anatomy .part").forEach(p=>p.classList.toggle("sel",p.dataset.k===k)); $("#anatomyExplain").innerHTML=AN[k][1]; }
+$$("#anatomy .part").forEach(p=>{p.addEventListener("click",()=>pick(p.dataset.k));p.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();pick(p.dataset.k);}});});
+$("#runHello").onclick=async()=>{const o=$("#helloOut");o.innerHTML='<span class="prompt">C:\\HelloApp&gt; </span>HelloApp.exe\n';await wait(350);o.innerHTML+="Hello, HNDIT!\n";await wait(200);o.innerHTML+='<span class="prompt">\nPress any key to continue . . .</span>';};
+
+/* ---------- 2. variables ---------- */
+const KEYWORDS=new Set("abstract as base bool break byte case catch char checked class const continue decimal default delegate do double else enum event explicit extern false finally fixed float for foreach goto if implicit in int interface internal is lock long namespace new null object operator out override params private protected public readonly ref return sbyte sealed short sizeof stackalloc static string struct switch this throw true try typeof uint ulong unchecked unsafe ushort using virtual void volatile while".split(" "));
+function checkVar(){
+  const t=$("#vType").value, n=$("#vName").value.trim(), v=$("#vVal").value;
+  let lit=v, ok=true, msg="";
+  const num=/^-?\d+(\.\d+)?$/.test(v.trim()), intLike=/^-?\d+$/.test(v.trim());
+  if(!/^[A-Za-z_][A-Za-z0-9_]*$/.test(n)){ok=false;msg=`<b>Invalid name.</b> "${esc(n)}" must start with a letter or _ and contain only letters, digits and _ (no spaces).`;}
+  else if(KEYWORDS.has(n)){ok=false;msg=`<b>Invalid name.</b> <code>${esc(n)}</code> is a C# keyword. Try <code>@${esc(n)}</code> or, better, a different name.`;}
+  else if(t==="int"){ lit=v.trim();
+    if(!intLike){ok=false;msg= num?`Compiler error <code>CS0266</code>: cannot implicitly convert <code>double</code> to <code>int</code>. An int holds whole numbers only.`:`Compiler error: an <code>int</code> needs a whole number, not text. If the value comes from a TextBox use <code>int.Parse(txt.Text)</code>.`;}
+    else if(Math.abs(+lit)>2147483647){ok=false;msg=`Compiler error <code>CS0029</code>: the value is outside the int range (about ±2.1 billion). Use <code>long</code>.`;}
+    else msg=`OK. <code>${esc(n)}</code> now holds the whole number ${esc(lit)}.`; }
+  else if(t==="double"){ lit=v.trim(); if(!num){ok=false;msg="A <code>double</code> needs a number, such as 3.45.";} else msg=`OK. Note: doubles are approximate. 0.1 + 0.2 gives 0.30000000000000004.`; }
+  else if(t==="decimal"){ lit=v.trim()+"m"; if(!num){ok=false;lit=v;msg="A <code>decimal</code> needs a number, such as 1500.00.";} else msg=`OK. The <code>m</code> suffix tells C# this is a decimal. Without it, <code>${esc(v.trim())}</code> would be a double and you'd get error CS0664.`; }
+  else if(t==="char"){ lit=`'${v}'`; if([...v].length!==1){ok=false;msg=`Compiler error: a <code>char</code> holds exactly one character in single quotes. "${esc(v)}" has ${[...v].length}. Use <code>string</code> for text.`;} else msg="OK. One character, in single quotes."; }
+  else if(t==="string"){ lit=`"${v}"`; msg=`OK. Any text goes in double quotes. Even <code>"123"</code> is text, not a number.`; }
+  else if(t==="bool"){ lit=v.trim(); if(lit!=="true"&&lit!=="false"){ok=false;msg= /^(true|false)$/i.test(lit)?`Compiler error <code>CS0103</code>: the name <code>${esc(lit)}</code> does not exist. C# is case-sensitive; write <code>${lit.toLowerCase()}</code>.`:"A <code>bool</code> can only be <code>true</code> or <code>false</code>.";} else msg="OK. Booleans drive if statements and loops."; }
+  $("#vLine").innerHTML=hl(`${t} ${n} = ${lit};`);
+  $("#vResult").innerHTML=`<div class="msg ${ok?"ok":"bad"}">${ok?"✓ ":"✗ "}${msg}</div>`;
+}
+["#vType","#vName","#vVal"].forEach(s=>$(s).addEventListener("input",checkVar));
+const TRIES=[["int","age","19"],["int","age","19.5"],["char","grade","A"],["char","grade","AB"],["bool","passed","True"],["decimal","fee","1500.00"],["string","class","Hello"],["int","total marks","90"]];
+$("#vTries").innerHTML='<span class="muted" style="font-size:.85rem;align-self:center">Try:</span>'+TRIES.map((t,i)=>`<button class="chip" data-i="${i}">${esc(t[0]+" "+t[1]+" = "+t[2])}</button>`).join("");
+$$("#vTries .chip").forEach(b=>b.onclick=()=>{const t=TRIES[b.dataset.i];$("#vType").value=t[0];$("#vName").value=t[1];$("#vVal").value=t[2];checkVar();});
+checkVar();
+
+/* ---------- 3. operators ---------- */
+let cMode="join";
+function conv(){
+  const a=$("#cA").value,b=$("#cB").value; let lines,out,why;
+  if(cMode==="join"){
+    lines=['string a = txtNumber1.Text;   // "'+a+'"','string b = txtNumber2.Text;   // "'+b+'"','lblResult.Text = a + b;'];
+    out=a+b; why=`<b>+ on two strings joins them</b> (concatenation). The computer sees text, not numbers, so "${esc(a)}" and "${esc(b)}" are glued together.`;
+  } else {
+    lines=['int a = int.Parse(txtNumber1.Text);','int b = int.Parse(txtNumber2.Text);','lblResult.Text = (a + b).ToString();'];
+    const ia=/^\s*-?\d+\s*$/.test(a), ib=/^\s*-?\d+\s*$/.test(b);
+    if(ia&&ib){ out=String(parseInt(a,10)+parseInt(b,10)); why="<b>Convert first, then add.</b> <code>int.Parse</code> turns text into an int. After adding, <code>ToString()</code> turns the number back into text for the label."; }
+    else { out="Unhandled exception: System.FormatException: Input string was not in a correct format."; why="<b>int.Parse failed</b> because the text is not a whole number. Later you will use <code>int.TryParse</code>, which checks first instead of crashing."; }
+  }
+  codeLines($("#cCode"),lines); $("#cOut").textContent="lblResult.Text → "+out; $("#cWhy").innerHTML=why;
+}
+$("#cJoin").onclick=()=>{cMode="join";$("#cJoin").setAttribute("aria-pressed","true");$("#cConv").setAttribute("aria-pressed","false");conv();};
+$("#cConv").onclick=()=>{cMode="conv";$("#cConv").setAttribute("aria-pressed","true");$("#cJoin").setAttribute("aria-pressed","false");conv();};
+["#cA","#cB"].forEach(s=>$(s).addEventListener("input",conv)); conv();
+function ops(){
+  const T=$("#oT").value; let a=+$("#oA").value, b=+$("#oB").value;
+  if(T==="int"){a=Math.trunc(a);b=Math.trunc(b);}
+  const fmt=x=>T==="int"?String(x):(Number.isInteger(x)?x.toFixed(1):String(+x.toFixed(10)));
+  const div=()=>{ if(b===0) return T==="int"?"DivideByZeroException":(a===0?"NaN":(a>0?"∞":"-∞")); return fmt(T==="int"?Math.trunc(a/b):a/b); };
+  const mod=()=>{ if(b===0) return T==="int"?"DivideByZeroException":"NaN"; return fmt(a%b); };
+  const rows=[["+","add",fmt(a+b)],["-","subtract",fmt(a-b)],["*","multiply",fmt(a*b)],["/","divide",div()],["%","remainder",mod()]];
+  $("#oBody").innerHTML=rows.map(r=>`<tr><td class="mono"><b>${r[0]}</b></td><td>${r[1]}</td><td class="mono">${fmt(a)} ${r[0]} ${fmt(b)}</td><td class="mono"><b>${r[2]}</b></td></tr>`).join("");
+  $("#oNote").innerHTML= T==="int"?"With <code>int</code>, <b>/</b> drops the decimal part: 7 / 2 = 3. Switch to <code>double</code> to get 3.5.":"With <code>double</code>, division keeps the decimal part.";
+}
+["#oA","#oB","#oT"].forEach(s=>$(s).addEventListener("input",ops)); ops();
+
+/* ---------- 4. if/else ---------- */
+const IF=[["marks >= 75",75,"A"],["marks >= 65",65,"B"],["marks >= 50",50,"C"],["marks >= 35",35,"S"]];
+const ifLines=["int marks = 68;","string grade;","","if (marks >= 75)",'    grade = "A";',"else if (marks >= 65)",'    grade = "B";',"else if (marks >= 50)",'    grade = "C";',"else if (marks >= 35)",'    grade = "S";',"else",'    grade = "F";'];
+function ifs(){
+  const m=+$("#mk").value; $("#mkV").textContent=m;
+  const L=ifLines.slice(); L[0]=`int marks = ${m};`; codeLines($("#ifCode"),L);
+  let hit=-1; IF.forEach((c,i)=>{ if(hit<0&&m>=c[1]) hit=i; });
+  const g= hit<0?"F":IF[hit][2]; $("#gV").textContent=g;
+  let html=""; IF.forEach((c,i)=>{ const st= hit<0||i<hit?"f":(i===hit?"t":"skip"); const lab= st==="t"?'<span class="pill ok">true → runs</span>':st==="f"?'<span class="pill bad">false</span>':'<span class="pill hi">not checked</span>'; html+=`<div class="cond ${st}"><span>${c[0]}</span>${lab}</div>`; });
+  html+=`<div class="cond ${hit<0?"t":"skip"}"><span>else</span>${hit<0?'<span class="pill ok">runs</span>':'<span class="pill hi">skipped</span>'}</div>`;
+  $("#conds").innerHTML=html;
+  const lineOf= hit<0?[11,12]:[3+hit*2,4+hit*2]; mark($("#ifCode"),lineOf);
+}
+$("#mk").addEventListener("input",ifs); ifs();
+
+/* ---------- 5. loop tracer ---------- */
+let trace=[],tIdx=-1;
+function loopSrc(s,e,p){return ["int total = 0;",`for (int i = ${s}; i <= ${e}; i += ${p})`,"{","    total = total + i;",'    Console.WriteLine("i = " + i + ", total = " + total);',"}",'Console.WriteLine("Sum = " + total);'];}
+function buildTrace(){
+  const s=Math.trunc(+$("#lS").value), e=Math.trunc(+$("#lE").value); let p=Math.trunc(+$("#lP").value); if(!(p>=1)){p=1;$("#lP").value=1;}
+  codeLines($("#loopCode"),loopSrc(s,e,p));
+  trace=[]; let total=0,i, out=[];
+  trace.push({ln:0,i:null,total:0,out:[...out],note:"<b>Line 1.</b> Create <code>total</code> and set it to 0.",f:"t"});
+  i=s; trace.push({ln:1,i,total,out:[...out],note:`<b>Start:</b> create <code>i</code> and set it to ${s}. This happens only once.`,f:"i"});
+  let guard=0;
+  while(true){
+    if(++guard>60){trace.push({ln:6,i,total,out:[...out],note:"<b>Stopped after 60 steps</b> to keep the demo short.",f:""});break;}
+    const c=i<=e;
+    trace.push({ln:1,i,total,out:[...out],note:`<b>Condition:</b> is ${i} &lt;= ${e}? <span class="pill ${c?"ok":"bad"}">${c}</span> ${c?"Run the body.":"Leave the loop."}`,f:""});
+    if(!c) break;
+    total+=i; trace.push({ln:3,i,total,out:[...out],note:`<b>Body:</b> total = ${total-i} + ${i} = ${total}.`,f:"t"});
+    out.push(`i = ${i}, total = ${total}`); trace.push({ln:4,i,total,out:[...out],note:"<b>Body:</b> print a line to the console.",f:""});
+    i+=p; trace.push({ln:1,i,total,out:[...out],note:`<b>Step:</b> i += ${p}, so i is now ${i}. Go back to the condition.`,f:"i"});
+  }
+  out.push(`Sum = ${total}`); trace.push({ln:6,i:null,total,out:[...out],note:`<b>Done.</b> The loop body ran ${out.length-1} time${out.length-1===1?"":"s"}. <code>i</code> only existed inside the loop.`,f:""});
+  tIdx=-1; showT();
+}
+function showT(){
+  const t=trace[tIdx];
+  $("#lCount").textContent=Math.max(0,tIdx+1)+" / "+trace.length;
+  if(!t){ mark($("#loopCode"),-1); $("#vi .vv").textContent="–"; $("#vt .vv").textContent="–"; $("#lOut").textContent=""; $("#lNote").innerHTML="<b>Press Step.</b> The first line creates <code>total</code> and sets it to 0."; $("#lStep").disabled=false; return; }
+  mark($("#loopCode"),t.ln);
+  $("#vi .vv").textContent=t.i===null?"–":t.i; $("#vt .vv").textContent=t.total;
+  $("#vi").classList.toggle("flash",t.f==="i"); $("#vt").classList.toggle("flash",t.f==="t");
+  $("#lOut").textContent=t.out.join("\n"); $("#lNote").innerHTML=t.note;
+  $("#lStep").disabled=tIdx>=trace.length-1;
+}
+$("#lStep").onclick=()=>{ if(tIdx<trace.length-1){tIdx++;showT();} };
+$("#lAll").onclick=async()=>{ $("#lAll").disabled=true; while(tIdx<trace.length-1){tIdx++;showT();await wait(220);} $("#lAll").disabled=false; };
+$("#lReset").onclick=buildTrace; ["#lS","#lE","#lP"].forEach(s=>$(s).addEventListener("change",buildTrace)); buildTrace();
+
+/* ---------- 6. methods ---------- */
+codeLines($("#mCode"),["static decimal CalculateTotal(decimal price, int qty,","                              decimal discountPercent)","{","    decimal subTotal = price * qty;","    decimal discount = subTotal * discountPercent / 100;","    return subTotal - discount;","}","","// return type: decimal","// parameters:  price, qty, discountPercent","// use void when a method returns nothing"]);
+const money=x=>(Math.round(x*100)/100).toFixed(2);
+function mCall(){ $("#mCall").innerHTML=hl(`decimal bill = CalculateTotal(${+$("#mP").value}m, ${Math.trunc(+$("#mQ").value)}, ${+$("#mD").value}m);`); }
+["#mP","#mQ","#mD"].forEach(s=>$(s).addEventListener("input",mCall)); mCall();
+$("#mGo").onclick=async()=>{
+  const p=+$("#mP").value,q=Math.trunc(+$("#mQ").value),d=+$("#mD").value; const S=["#ms1","#ms2","#ms3","#ms4","#ms5"];
+  S.forEach(s=>{$(s+" b").textContent="–";$(s).classList.remove("lit");}); $("#mRet").textContent="–"; $("#mGo").disabled=true;
+  const set=async(s,v,ln)=>{ S.forEach(x=>$(x).classList.remove("lit")); $(s).classList.add("lit"); $(s+" b").textContent=v; if(ln!==undefined) mark($("#mCode"),ln); await wait(450); };
+  await set("#ms1",money(p),0); await set("#ms2",q,0); await set("#ms3",money(d),1);
+  const sub=p*q, dis=sub*d/100; await set("#ms4",money(sub),3); await set("#ms5",money(dis),4);
+  S.forEach(x=>$(x).classList.remove("lit")); mark($("#mCode"),5); $("#mRet").textContent=money(sub-dis); $("#mGo").disabled=false;
+};
+
+/* ---------- 7. classes & objects ---------- */
+codeLines($("#clsCode"),["class Student","{","    public string Name;","    public string IndexNo;","    public int Marks;","","    public string GetResult()","    {","        if (Marks >= 50) return \"Pass\";","        return \"Fail\";","    }","}"]);
+let objs=[{n:"Kavin Raj",i:"IT/26/001",m:72,ex:true},{n:"Fathima Nusra",i:"IT/26/002",m:44,ex:true}];
+function renderHeap(newIdx){
+  $("#heap").innerHTML=objs.map((o,k)=>`<div class="obj${k===newIdx?" new":""}"><header><span>s${k+1} : Student</span><span>${o.ex?"example":""}</span></header>
+    <dl><dt>Name</dt><dd>${esc(o.n)}</dd><dt>IndexNo</dt><dd>${esc(o.i)}</dd><dt>Marks</dt><dd>${o.m}</dd></dl>
+    <footer><button class="btn small" data-k="${k}">s${k+1}.GetResult()</button><span class="res" id="res${k}"></span></footer></div>`).join("");
+  $("#oCount").textContent=objs.length+" object"+(objs.length===1?"":"s");
+  $$("#heap button").forEach(b=>b.onclick=()=>{const o=objs[b.dataset.k];const r=o.m>=50?"Pass":"Fail";$("#res"+b.dataset.k).innerHTML=`→ <span class="pill ${r==="Pass"?"ok":"bad"}">"${r}"</span>`;});
+}
+function objLines(){ const k=objs.length+1; codeLines($("#oLines"),[`Student s${k} = new Student();`,`s${k}.Name = "${$("#oName").value}";`,`s${k}.IndexNo = "${$("#oIdx").value}";`,`s${k}.Marks = ${Math.trunc(+$("#oMarks").value)||0};`]); }
+["#oName","#oIdx","#oMarks"].forEach(s=>$(s).addEventListener("input",objLines));
+$("#oNew").onclick=()=>{ if(objs.length>=9){objs.splice(2,1);} objs.push({n:$("#oName").value||"(no name)",i:$("#oIdx").value,m:Math.max(0,Math.min(100,Math.trunc(+$("#oMarks").value)||0))}); renderHeap(objs.length-1); const nn=objs.length+1; $("#oIdx").value="IT/26/"+String(nn+1).padStart(3,"0"); objLines(); };
+renderHeap(); objLines();
+
+/* ---------- 8. pipeline ---------- */
+let lang="cs";
+const STG=[
+  {n:"1 · source",b:"Source code",s:"Program.cs, written by you",show:()=>lang==="cs"?["int a = 5;","int b = 3;","int c = a + b;"]:["Dim a As Integer = 5","Dim b As Integer = 3","Dim c As Integer = a + b"],
+   note:()=>`<b>Source code</b> is human-readable text in ${lang==="cs"?"C#":"VB.NET"}. The computer cannot run this directly.`},
+  {n:"2 · compiler",b:lang==="cs"?"C# compiler":"VB compiler",s:"csc / Roslyn checks syntax and types",show:()=>["// Checking for errors…","// 0 errors, 0 warnings","========== Build: 1 succeeded =========="],
+   note:()=>"<b>The language compiler</b> checks your code. Any mistake (missing <code>;</code>, wrong type) stops the build here and appears in the Error List."},
+  {n:"3 · CIL",b:"CIL code",s:"Common Intermediate Language",show:()=>["ldc.i4.5      // push 5","stloc.0       // store in a","ldc.i4.3      // push 3","stloc.1       // store in b","ldloc.0       // load a","ldloc.1       // load b","add           // a + b","stloc.2       // store in c"],
+   note:()=>`<b>CIL</b> is the same no matter which .NET language you used. ${lang==="vb"?"See? The VB.NET version produced <b>exactly the same</b> CIL as C#.":"Switch to VB.NET source and build again: the CIL is identical."}`},
+  {n:"4 · assembly",b:"Assembly",s:"HelloApp.exe or .dll in bin\\Debug",show:()=>["bin\\Debug\\","  HelloApp.exe      ← assembly: CIL + metadata","  HelloApp.pdb      ← debug symbols","  HelloApp.exe.config"],
+   note:()=>"<b>The assembly</b> (.exe or .dll) holds the CIL plus metadata describing your classes. This is the file you give to users. Build time ends here."},
+  {n:"5 · CLR + JIT",b:"CLR & JIT",s:"Loads the assembly; JIT compiles methods when first called",show:()=>["CLR: load HelloApp.exe","CLR: check security, set up memory (garbage collector)","JIT: compile Main() → native code","JIT: methods are compiled the first time they are called"],
+   note:()=>"<b>Run time.</b> The <b>CLR</b> (Common Language Runtime) loads the assembly and manages memory. The <b>JIT</b> (just-in-time) compiler turns CIL into machine code for <i>this</i> computer's processor."},
+  {n:"6 · CPU",b:"Machine code",s:"Native instructions the processor runs",show:()=>["mov  dword ptr [rbp-4], 5","mov  dword ptr [rbp-8], 3","mov  eax, dword ptr [rbp-4]","add  eax, dword ptr [rbp-8]","mov  dword ptr [rbp-0Ch], eax","; (illustrative x64 output)"],
+   note:()=>"<b>Machine code</b> runs directly on the CPU. Because the JIT does this step on the user's computer, the same .exe can run on different processors."}
+];
+function renderPipe(on,done){ $("#pipe").innerHTML=STG.map((s,i)=>`<div class="stagebox${i===on?" on":""}${i<done?" done":""}"><span class="sn">${s.n}</span><b>${i===1?(lang==="cs"?"C# compiler":"VB compiler"):s.b}</b><small>${s.s}</small></div>`).join(""); }
+function showStage(i){ const s=STG[i]; $("#pShowT").textContent="Stage "+(i+1)+": "+(i===1?(lang==="cs"?"C# compiler":"VB compiler"):s.b); codeLines($("#pShow"),s.show(),{raw:i>1}); if(i>1) $$("#pShow .ln").forEach(l=>l.innerHTML=esc(l.textContent)); $("#pNote").innerHTML=s.note(); }
+let busy=false;
+async function runStages(a,b){ busy=true; ["#pBuild","#pRun","#pReset"].forEach(s=>$(s).disabled=true); for(let i=a;i<=b;i++){renderPipe(i,i);showStage(i);await wait(1100);} renderPipe(-1,b+1); busy=false; $("#pReset").disabled=false; $("#pBuild").disabled=false; $("#pRun").disabled=b>=5; }
+$("#pBuild").onclick=()=>runStages(0,3);
+$("#pRun").onclick=()=>runStages(4,5);
+$("#pReset").onclick=()=>{renderPipe(-1,0);$("#pRun").disabled=true;codeLines($("#pShow"),STG[0].show());$("#pShowT").textContent="Stage 1: Source code";$("#pNote").innerHTML="<b>Press Build.</b> Watch each stage light up in order.";};
+
+$("#pipe").addEventListener("click",e=>{const b=e.target.closest(".stagebox"); if(!b||busy) return; const i=[...$("#pipe").children].indexOf(b); showStage(i); renderPipe(i,0);});
+function setLang(l){lang=l;$("#langCs").setAttribute("aria-pressed",l==="cs");$("#langVb").setAttribute("aria-pressed",l==="vb");if(!busy)$("#pReset").onclick();}
+$("#langCs").onclick=()=>setLang("cs"); $("#langVb").onclick=()=>setLang("vb");
+$("#pReset").onclick();
+
+/* ---------- 9. DB concepts ---------- */
+const STU=[["IT/26/001","Kavin Raj","HNDIT",72],["IT/26/002","Fathima Nusra","HNDIT",44],["IT/26/003","Ayesha Rinoza","HNDIT",81],["AC/26/001","Nimal Perera","HNDA",65],["EN/26/001","Shanthan Kumar","HNDE",58]];
+const CRS=[["HNDIT","Higher National Diploma in IT",4],["HNDA","Higher National Diploma in Accountancy",4],["HNDE","Higher National Diploma in English",3]];
+function tbl(el,cols,rows,cls){ el.innerHTML=`<thead><tr>${cols.map((c,i)=>`<th data-c="${i}" class="${cls[i]||""}">${c}</th>`).join("")}</tr></thead><tbody>${rows.map((r,ri)=>`<tr data-r="${ri}">${r.map((v,i)=>`<td data-c="${i}">${esc(v)}</td>`).join("")}</tr>`).join("")}</tbody>`; }
+tbl($("#tStudents"),["IndexNo","Name","CourseCode","Marks"],STU,["pk","","fk",""]);
+tbl($("#tCourses"),["CourseCode","CourseName","Years"],CRS,["pk","",""]);
+const TERMS={
+  "Table":["A <b>table</b> holds data about one kind of thing: here, students and courses. A database usually has many tables.",()=>{$("#tStudents").classList.add("hlall");$("#tCourses").classList.add("hlall");}],
+  "Row / record":["A <b>row</b> (record) is one item: one student. Every row has the same columns.",()=>$$('#tStudents tr[data-r="2"] td').forEach(td=>td.classList.add("hl"))],
+  "Column / field":["A <b>column</b> (field) is one piece of information stored for every row, with a fixed data type. <code>Marks</code> is an INT column.",()=>$$('#tStudents [data-c="3"]').forEach(td=>td.classList.add("hl"))],
+  "Value":["A <b>value</b> is where one row meets one column: Ayesha's marks are 81.",()=>$('#tStudents tr[data-r="2"] td[data-c="3"]').classList.add("hl")],
+  "Primary key":["A <b>primary key</b> uniquely identifies each row. No two students share an IndexNo, and it can never be empty. Names are not good keys because two students can share a name.",()=>{$$('#tStudents [data-c="0"]').forEach(td=>td.classList.add("hl"));$$('#tCourses [data-c="0"]').forEach(td=>td.classList.add("hl"));}],
+  "Foreign key":["A <b>foreign key</b> links tables. <code>Students.CourseCode</code> must match a <code>CourseCode</code> that exists in Courses. This is a <b>relationship</b>: one course has many students.",()=>{$$('#tStudents [data-c="2"]').forEach(td=>td.classList.add("hl"));$$('#tCourses [data-c="0"]').forEach(td=>td.classList.add("hl"));}]
+};
+$("#dbTerms").innerHTML=Object.keys(TERMS).map(k=>`<button class="chip" aria-pressed="false">${k}</button>`).join("");
+$$("#dbTerms .chip").forEach(b=>b.onclick=()=>{ $$("#dbTerms .chip").forEach(x=>x.setAttribute("aria-pressed","false")); b.setAttribute("aria-pressed","true"); $$(".dbt .hl").forEach(x=>x.classList.remove("hl")); $$(".dbt").forEach(x=>x.classList.remove("hlall")); const t=TERMS[b.textContent]; $("#dbNote").innerHTML=t[0]; t[1](); });
+
+/* ---------- 10. SQL playground ---------- */
+const SEED=`CREATE TABLE Courses(CourseCode TEXT PRIMARY KEY, CourseName TEXT NOT NULL, Years INTEGER);
+CREATE TABLE Students(IndexNo TEXT PRIMARY KEY, Name TEXT NOT NULL, CourseCode TEXT REFERENCES Courses(CourseCode), Marks INTEGER);
+${CRS.map(c=>`INSERT INTO Courses VALUES('${c[0]}','${c[1]}',${c[2]});`).join("\n")}
+${STU.map(s=>`INSERT INTO Students VALUES('${s[0]}','${s[1]}','${s[2]}',${s[3]});`).join("\n")}
+INSERT INTO Students VALUES('IT/26/004','Mohamed Ifham','HNDIT',90);
+INSERT INTO Students VALUES('IT/26/005','Tharushi Silva','HNDIT',37);
+INSERT INTO Students VALUES('AC/26/002','Sanjana Rajan','HNDA',77);`;
+const PRESETS=[
+  ["All students","SELECT * FROM Students;"],
+  ["Pick columns","SELECT Name, Marks FROM Students;"],
+  ["WHERE","SELECT Name, Marks\nFROM Students\nWHERE Marks >= 50;"],
+  ["ORDER BY","SELECT Name, Marks\nFROM Students\nORDER BY Marks DESC;"],
+  ["LIKE","SELECT * FROM Students\nWHERE Name LIKE '%an%';"],
+  ["COUNT / AVG","SELECT CourseCode, COUNT(*) AS Students, AVG(Marks) AS AvgMarks\nFROM Students\nGROUP BY CourseCode;"],
+  ["JOIN","SELECT s.Name, c.CourseName\nFROM Students s\nJOIN Courses c ON s.CourseCode = c.CourseCode;"],
+  ["INSERT","INSERT INTO Students (IndexNo, Name, CourseCode, Marks)\nVALUES ('IT/26/006', 'Your Name', 'HNDIT', 70);"],
+  ["UPDATE","UPDATE Students\nSET Marks = 55\nWHERE IndexNo = 'IT/26/002';"],
+  ["DELETE","DELETE FROM Students\nWHERE IndexNo = 'IT/26/005';"],
+  ["Forgot WHERE!","UPDATE Students SET Marks = 0;"]
+];
+let SQL=null, db=null;
+$("#sqlPresets").innerHTML=PRESETS.map((p,i)=>`<button class="chip" data-i="${i}">${p[0]}</button>`).join("");
+$$("#sqlPresets .chip").forEach(b=>b.onclick=()=>{ $$("#sqlPresets .chip").forEach(x=>x.setAttribute("aria-pressed","false")); b.setAttribute("aria-pressed","true"); $("#sqlIn").value=PRESETS[b.dataset.i][1]; runSQL(); });
+$("#sqlIn").value=PRESETS[0][1];
+function resTable(res){
+  if(!res.length) return "";
+  return res.map(r=>`<div class="tbl-wrap"><table><thead><tr>${r.columns.map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${r.values.map(v=>`<tr>${v.map(x=>`<td>${x===null?'<span class="muted">NULL</span>':esc(typeof x==="number"&&!Number.isInteger(x)?x.toFixed(2):x)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`).join("");
+}
+function schema(){
+  if(!db) return;
+  const t=db.exec("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name");
+  $("#schema").innerHTML=(t[0]?t[0].values:[]).map(([n])=>{ const cols=db.exec(`PRAGMA table_info(${n})`)[0].values.map(c=>c[1]+(c[5]?" <span class='pk'></span>":"")+" <span class='muted'>"+c[2]+"</span>").join("<br>"); const cnt=db.exec(`SELECT COUNT(*) FROM ${n}`)[0].values[0][0]; return `<div><b>${n}</b> <span class="muted">(${cnt} rows)</span><br>${cols}</div>`; }).join("");
+}
+function runSQL(){
+  if(!db){ $("#sqlMsg").innerHTML='<div class="msg bad">The database engine has not loaded yet. Check your internet connection and reload the page.</div>'; return; }
+  const q=$("#sqlIn").value;
+  try{
+    const res=db.exec(q); const ch=db.getRowsModified();
+    const isSel=res.length>0;
+    let msg= isSel? `✓ ${res[res.length-1].values.length} row(s) returned.` : `✓ Done. ${ch} row(s) affected.`;
+    if(/^\s*(update|delete)\b/i.test(q)&&!/\bwhere\b/i.test(q)) msg+=" ⚠ No WHERE clause, so <b>every row</b> was changed. Press Reset database to undo.";
+    $("#sqlMsg").innerHTML=`<div class="msg ok">${msg}</div>`;
+    $("#sqlRes").innerHTML= isSel? resTable(res) : resTable(db.exec(/students/i.test(q)?"SELECT * FROM Students":/courses/i.test(q)?"SELECT * FROM Courses":"SELECT 1 WHERE 0"));
+    if(!isSel&&$("#sqlRes").innerHTML) $("#sqlRes").insertAdjacentHTML("afterbegin",'<div class="muted" style="font-size:.85rem;margin-bottom:6px">The table now looks like this:</div>');
+  }catch(e){ $("#sqlMsg").innerHTML=`<div class="msg bad">✗ ${esc(e.message)}</div>`; $("#sqlRes").innerHTML=""; }
+  schema();
+}
+function resetDB(){ if(!SQL) return; if(db) db.close(); db=new SQL.Database(); db.exec("PRAGMA foreign_keys=ON;"+SEED); schema(); $("#sqlMsg").innerHTML='<div class="msg ok">Database reset to the starting data.</div>'; $("#sqlRes").innerHTML=""; }
+$("#sqlRun").onclick=runSQL; $("#sqlReset").onclick=()=>{resetDB();};
+$("#sqlIn").addEventListener("keydown",e=>{ if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){e.preventDefault();runSQL();} });
+if(typeof initSqlJs==="function"){
+  initSqlJs().then(S=>{ SQL=S; resetDB(); $("#sqlMsg").innerHTML=""; $("#sqlStatus").textContent="SQLite engine ready."; runSQL(); wSearch(); })
+    .catch(e=>{ $("#sqlStatus").textContent="Could not start the database engine: "+e.message; });
+} else { $("#sqlStatus").textContent="The database engine could not load. Check the internet connection and reload."; $("#schema").textContent="Unavailable"; }
+
+/* ---------- 11. C# + DB ---------- */
+let safe=true;
+const FLOW=["Button click","SqlConnection","SqlCommand","SQL Server","DataTable","DataGridView"];
+$("#flow").innerHTML=FLOW.map((f,i)=>`${i?'<span class="ar">→</span>':""}<span class="fs" data-i="${i}">${f}</span>`).join("");
+function wCode(){
+  const v=$("#wSearch").value;
+  const L=safe?[
+    'string connStr = @"Server=.\\SQLEXPRESS;Database=CollegeDB;Trusted_Connection=True;";',
+    "",
+    "using (SqlConnection conn = new SqlConnection(connStr))",
+    "{",
+    '    string sql = "SELECT * FROM Students WHERE Name LIKE @name";',
+    "    SqlCommand cmd = new SqlCommand(sql, conn);",
+    '    cmd.Parameters.AddWithValue("@name", "%" + txtSearch.Text + "%");',
+    "",
+    "    SqlDataAdapter da = new SqlDataAdapter(cmd);",
+    "    DataTable dt = new DataTable();",
+    "    da.Fill(dt);                  // opens, runs, closes",
+    "    dgvStudents.DataSource = dt;  // show in the grid",
+    "}"]:[
+    'string connStr = @"Server=.\\SQLEXPRESS;Database=CollegeDB;Trusted_Connection=True;";',
+    "",
+    "using (SqlConnection conn = new SqlConnection(connStr))",
+    "{",
+    "    // DON'T: user text pasted straight into the SQL",
+    "    string sql = \"SELECT * FROM Students WHERE Name LIKE '%\"",
+    "                 + txtSearch.Text + \"%'\";",
+    "    SqlCommand cmd = new SqlCommand(sql, conn);",
+    "",
+    "    SqlDataAdapter da = new SqlDataAdapter(cmd);",
+    "    DataTable dt = new DataTable();",
+    "    da.Fill(dt);",
+    "    dgvStudents.DataSource = dt;",
+    "}"];
+  codeLines($("#wCode"),L);
+  const sent= safe? ["-- SQL sent to the server:","SELECT * FROM Students WHERE Name LIKE @name","-- @name = '%"+v+"%'  (sent separately, always treated as data)"] : ["-- SQL sent to the server:","SELECT * FROM Students WHERE Name LIKE '%"+v+"%'"];
+  codeLines($("#wSql"),sent,{raw:true}); $$("#wSql .ln").forEach((l,i)=>l.innerHTML=esc(sent[i]));
+  $("#wNote").innerHTML= safe? "<b>Parameters keep data and code apart.</b> Whatever the user types is only ever a value to search for. Now switch to <i>Joining strings</i> and search for <code>' OR 1=1 --</code>."
+    : "<b>SQL injection.</b> The user's text becomes part of the SQL command itself. Search for <code>' OR 1=1 --</code>: the condition becomes always true and every row comes back. In a real app this could leak or delete data. Always use parameters.";
+}
+async function wSearch(){
+  wCode();
+  const v=$("#wSearch").value;
+  for(let i=0;i<FLOW.length;i++){ $$("#flow .fs").forEach((f,j)=>f.classList.toggle("on",j===i)); await wait(140); }
+  $$("#flow .fs").forEach(f=>f.classList.remove("on"));
+  if(!db){ $("#wGrid").innerHTML='<p class="muted" style="padding:10px">Database engine not loaded.</p>'; return; }
+  try{
+    const res= safe? db.exec("SELECT * FROM Students WHERE Name LIKE ?",["%"+v+"%"]) : db.exec("SELECT * FROM Students WHERE Name LIKE '%"+v+"%'");
+    const n=res[0]?res[0].values.length:0;
+    $("#wGrid").innerHTML= n? resTable(res).replace('class="tbl-wrap"','') : '<p class="muted" style="padding:10px">No matching students.</p>';
+    $("#wStat").textContent=`dgvStudents · ${n} row(s)`+(!safe&&n>0&&/'/.test(v)?" · ⚠ injected SQL changed the query":"");
+  }catch(e){ $("#wGrid").innerHTML=`<p class="msg bad" style="margin:8px">SqlException: ${esc(e.message)}</p>`; $("#wStat").textContent="The app crashed with a SQL error. That alone tells an attacker the input reaches the SQL."; }
+}
+$("#wGo").onclick=wSearch; $("#wSearch").addEventListener("keydown",e=>{if(e.key==="Enter")wSearch();}); $("#wSearch").addEventListener("input",wCode);
+$("#wSafe").onclick=()=>{safe=true;$("#wSafe").setAttribute("aria-pressed","true");$("#wUnsafe").setAttribute("aria-pressed","false");wSearch();};
+$("#wUnsafe").onclick=()=>{safe=false;$("#wUnsafe").setAttribute("aria-pressed","true");$("#wSafe").setAttribute("aria-pressed","false");wSearch();};
+wCode();
+
+/* ---------- 12. quiz ---------- */
+const QZ=[
+  ["Which line correctly stores a student's name?",["string name = 'Nimal';","string name = \"Nimal\";","String name = Nimal;","name = \"Nimal\""],1,"Strings use double quotes, and every statement ends with a semicolon."],
+  ["Which data type should you use for money, such as a course fee?",["int","double","decimal","char"],2,"decimal is exact. double can give tiny rounding errors."],
+  ["txtA.Text is \"10\" and txtB.Text is \"5\". What does txtA.Text + txtB.Text give?",["15","\"105\"","An error","\"10 5\""],1,"Text + text joins the strings. Convert with int.Parse first to add them."],
+  ["What is 7 / 2 when both are int?",["3.5","3","4","Error"],1,"Integer division drops the decimal part."],
+  ["With marks = 80, which grade is set by: if (marks >= 65) B; else if (marks >= 75) A?",["A","B","Both","Neither"],1,"The first true condition wins. 80 >= 65 is true, so the A check is never reached. Order matters."],
+  ["How many times does for (int i = 1; i <= 5; i++) run its body?",["4","5","6","Forever"],1,"i takes the values 1, 2, 3, 4 and 5."],
+  ["What is an object?",["A blueprint","One instance created from a class with new","A namespace","A method"],1,"The class is the blueprint; new Student() builds one object from it."],
+  ["What does the C# compiler produce when you build?",["Machine code","CIL inside an assembly (.exe/.dll)","SQL","HTML"],1,"Machine code comes later, when the JIT compiler runs inside the CLR."],
+  ["Which column is the best primary key for Students?",["Name","Marks","IndexNo","CourseCode"],2,"A primary key must be unique for every row. Names and marks can repeat."],
+  ["Which SQL statement changes existing rows?",["SELECT","INSERT","UPDATE","CREATE"],2,"UPDATE … SET … WHERE … changes rows. Never forget the WHERE."]
+];
+let answered={};
+function renderQuiz(){
+  answered={};
+  $("#quiz").innerHTML=QZ.map((q,i)=>`<div class="card q"><div><span class="eyebrow">Q${i+1}</span><div style="font-weight:700;margin-top:2px">${esc(q[0])}</div></div><div class="opts">${q[1].map((o,j)=>`<button class="opt" data-q="${i}" data-o="${j}"><span class="mono">${esc(o)}</span></button>`).join("")}</div><div class="why" id="why${i}"></div></div>`).join("");
+  $$("#quiz .opt").forEach(b=>b.onclick=()=>{
+    const qi=+b.dataset.q, oi=+b.dataset.o; if(answered[qi]!==undefined) return; answered[qi]=oi;
+    const right=QZ[qi][2];
+    $$(`#quiz .opt[data-q="${qi}"]`).forEach(x=>{x.disabled=true; const j=+x.dataset.o; if(j===right)x.classList.add("right"); else if(j===oi)x.classList.add("wrong");});
+    $("#why"+qi).innerHTML=(oi===right?'<span class="pill ok">Correct</span> ':'<span class="pill bad">Not quite</span> ')+esc(QZ[qi][3]);
+    score();
+  });
+  score();
+}
+function score(){ const n=Object.keys(answered).length, s=Object.entries(answered).filter(([q,o])=>QZ[q][2]===o).length; $("#qScore").textContent=`${s} / ${QZ.length}`; $("#qMsg").textContent= n<QZ.length? `${QZ.length-n} left to answer.` : s>=8?"Great start. You are ready for Week 1.": s>=5?"Good. Revisit the stops you missed.":"Go back through the stops and try again."; }
+$("#qReset").onclick=renderQuiz; renderQuiz();
+
+/* ---------- start ---------- */
+const fromHash=()=>{const h=(location.hash||"").slice(1); const idx=stops.findIndex(s=>s.id===h); return idx;};
+window.addEventListener("hashchange",()=>{const i=fromHash(); if(i>=0&&i!==cur) go(i);});
+go(Math.max(0,fromHash()));
+})();
+</script>
+
+</body></html>
